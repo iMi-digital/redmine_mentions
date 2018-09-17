@@ -12,7 +12,7 @@
 <% regex_highlight = '/\B('+users_regex+')\b/g' %>
 <script>
     var redmineMentionsLoader = function() {
-        $('#issue_notes,#issue_description').textcomplete([
+        $('#issue_notes').textcomplete([
             {
                 mentions: <%=  users.collect{|u| "#{u.firstname} #{u.lastname} - <small>#{u.login}</small>"}.to_json.html_safe %>,
                 match: <%=regex_find%>,
@@ -33,7 +33,7 @@
 
 
         if (typeof CKEDITOR === 'undefined') { // compat problems with CKEditor, we can live without that...
-            $('#issue_notes,#issue_description').overlay([
+            $('#issue_notes').overlay([
                 {
                     match: new RegExp(<%=regex_highlight%>),
                     css: {
