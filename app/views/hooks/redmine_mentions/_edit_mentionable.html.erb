@@ -11,32 +11,44 @@
 <% users_regex = users.collect{|u| "#{Setting.plugin_redmine_mentions['trigger']}#{u.login}"}.join('|')%>
 <% regex_highlight = '/\B('+users_regex+')\b/g' %>
 <script>
-  $('#issue_notes,#issue_description').textcomplete([
-    {
-      mentions: <%=  users.collect{|u| "#{u.firstname} #{u.lastname} - <small>#{u.login}</small>"}.to_json.html_safe %>,
-      match: <%=regex_find%>,
-      search: function(term, callback) {
-        callback($.map(this.mentions, function(mention) {
-          return mention.toLowerCase().indexOf(term.toLowerCase()) !== -1 ? mention : null;
-        }));
-      },
-      index: 1,
-      replace: function(mention) {
-        var parts = mention.split(' - ');
-        var name = parts[1].substring(parts[1].lastIndexOf("<small>")+7,parts[1].lastIndexOf("</small>"));
-        return '<%=Setting.plugin_redmine_mentions['trigger']%>' + name + ' ';
-      }
-    }
-  ]);
+    var redmineMentionsLoader = function() {
+        $('#issue_notes,#issue_description').textcomplete([
+            {
+                mentions: <%=  users.collect{|u| "#{u.firstname} #{u.lastname} - <small>#{u.login}</small>"}.to_json.html_safe %>,
+                match: <%=regex_find%>,
+                search: function(term, callback) {
+                    console.log(term);
+                    callback($.map(this.mentions, function(mention) {
+                        return mention.toLowerCase().indexOf(term.toLowerCase()) !== -1 ? mention : null;
+                    }));
+                },
+                index: 1,
+                replace: function(mention) {
+                    var parts = mention.split(' - ');
+                    var name = parts[1].substring(parts[1].lastIndexOf("<small>")+7,parts[1].lastIndexOf("</small>"));
+                    return '<%=Setting.plugin_redmine_mentions['trigger']%>' + name + ' ';
+                }
+            }
+        ]);
 
-  if (typeof CKEDITOR == 'undefined') { // compat problems with CKEditor, we can live without that...
-    $('#issue_notes,#issue_description').overlay([
-      {
-        match: new RegExp(<%=regex_highlight%>),
-        css: {
-          'background-color': '#C6D5F3',
+
+        if (typeof CKEDITOR === 'undefined') { // compat problems with CKEditor, we can live without that...
+            $('#issue_notes,#issue_description').overlay([
+                {
+                    match: new RegExp(<%=regex_highlight%>),
+                    css: {
+                        'background-color': '#C6D5F3',
+                    }
+                }
+            ]);
         }
-      }
-    ]);
-  }
+    };
+
+    if (typeof EasyGem !== 'undefined') {
+        // some special compatbility code for EasyRedmine 2018
+        // easy_ckeditor is loaded via module, so we have to load the easy_ckeditor first
+        EasyGem.loadModules(['easy_ckeditor'], redmineMentionsLoader);
+    } else {
+        redmineMentionsLoader();
+    }
 </script>
